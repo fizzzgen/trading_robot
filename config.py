@@ -5,24 +5,24 @@ STOP_TIME = 7 * 5 * 60   # stop if we reached STOP_TIME
 PAIRS = ['USDT_ETH']
 
 
-JobStatus(object):
+class JobStatus(object):
     ENQUEUED = 0
     EXECUTING = 1
     FINISHED = 2
 
 
-TransactionType(object):
+class TransactionType(object):
     BUY = 0
     SELL = 1
 
 
-TransactionStatus(object):
+class TransactionStatus(object):
     ENQUEUED = 0
     ORDERED = 1
     PERFORMED = 2
 
 
-JobType(object):
+class JobType(object):
     PRICE_UPDATE = 0
     PREDICTION_GENERATE = 1
     PROCESS_TRANSACTIONS = 2
