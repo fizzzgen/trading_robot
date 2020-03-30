@@ -9,7 +9,7 @@ cur.execute(
     '''CREATE TABLE buy_signals(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     ts INTEGER,
-    info TEXT
+    info TEXT,
     );
     '''
 )
@@ -18,7 +18,7 @@ cur.execute(
     '''CREATE TABLE buy_signals_history(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     ts INTEGER,
-    info TEXT
+    info TEXT,
     );
     '''
 )
@@ -27,7 +27,13 @@ cur.execute(
     '''CREATE TABLE transactions(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     ts INTEGER,
-    info TEXT
+    ts_performed INTEGER,
+    type INTEGER,
+    pair TEXT,
+    status INTEGER,
+    amount REAL,
+    price REAL,
+    price_performed REAL,
     );
     '''
 )
@@ -36,7 +42,13 @@ cur.execute(
     '''CREATE TABLE transactions_history(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     ts INTEGER,
-    info TEXT
+    ts_performed INTEGER,
+    type INTEGER,
+    pair TEXT,
+    status INTEGER,
+    amount REAL,
+    price REAL,
+    price_performed REAL,
     );
     '''
 )
@@ -45,7 +57,8 @@ cur.execute(
     '''CREATE TABLE scheduler(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     ts INTEGER,
-    info TEXT,
+    job_type INTEGER,
+    status INTEGER,
     );
     '''
 )
@@ -54,7 +67,10 @@ cur.execute(
     '''CREATE TABLE price(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     ts INTEGER,
-    info TEXT,
+    avg REAL,
+    buy REAL,
+    sell REAL,
+    pair TEXT,
     );
     '''
 )
