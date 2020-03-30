@@ -3,7 +3,7 @@ import pandas
 import datetime
 import config
 
-_estimator = pickle.load(open(config._ESTIMATOR_PATH, 'rb'))
+_estimator = pickle.load(open(config.ESTIMATOR_PATH, 'rb'))
 
 
 def predict(price_history):
@@ -17,9 +17,9 @@ def predict(price_history):
         'class_proba': predicted,
         'buy': predicted_final,
         'buy_price': price_history[-1],
-        'stop_price': config._STOP_PERCENT * price_history[-1],
+        'stop_price': config.STOP_PERCENT * price_history[-1],
         'stop_utc_time': (
-            utc_now + datetime.timedelta(seconds=config._STOP_TIME)
+            utc_now + datetime.timedelta(seconds=config.STOP_TIME)
         ),
         'utc_time': utc_now,
     }
