@@ -1,14 +1,13 @@
-import config
+from conf import config
+from conf import database_setup
 import sqlite3
 import requests
 import json
-import time
 import logging
 import datetime
 
 conn = sqlite3.connect(config.DB_PATH)
 cur = conn.cursor()
-
 
 for pair in config.PAIRS:
     url = 'https://poloniex.com/public?command=returnOrderBook&currencyPair={}&depth=1'.format(pair)
