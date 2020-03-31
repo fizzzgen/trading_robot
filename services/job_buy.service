@@ -1,0 +1,9 @@
+[Unit]
+Description=Adding new prices to data
+
+[Service]
+ExecStart=/usr/bin/python3 /home/fizzzgen/trading_robot/job_buy.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
