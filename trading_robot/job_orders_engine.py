@@ -88,13 +88,12 @@ def process_buy(pair):
     ).fetchall()[0]
 
     balance = attrdict.AttrDict(polo.returnCompleteBalances()[config.get_pair_first_symbol(pair)])
-    amount = balance.available * config.MAX_ORDER_PERCENT
 
+    target_price = latest_order.buy * config.ORDERBOOK_FORCER_MOVE_PERCENT
+    amount = balance.available * config.MAX_ORDER_PERCENT / target_price
     if amount < config.MINIMAL_AMOUNT:
         logging.info('STOP BUY PAIR %s, BUY FAIL: NOT ENOUGH BALANCE', pair)
         return False
-
-    target_price = latest_order.buy * config.ORDERBOOK_FORCER_MOVE_PERCENT
 
     order_data = polo.buy(pair, target_price, amount)
 
@@ -215,7 +214,7 @@ def process_sell(pair):
     )
     balance = attrdict.AttrDict(polo.returnCompleteBalances()[config.get_pair_second_symbol(pair)]).available
     for trade in new_trades:
-        can_sell_amount = balance * (trade.rate * config.STOP_PERCENT)
+        can_sell_amount = balance
         target_price = trade.rate * config.STOP_PERCENT
         sell_amount = min(trade.amount, can_sell_amount)
         if sell_amount < config.MINIMAL_AMOUNT:
