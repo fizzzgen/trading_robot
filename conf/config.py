@@ -27,6 +27,16 @@ class TransactionStatus(object):
     COMPLETED = 3
     CANCELLED = 4
 
+class TradeType(object):
+    BUY = 0
+    SELL = 1
+
+
+class TradeStatus(object):
+    NOT_PROCEESSED = 0
+    PROCESSED = 1
+
+
 
 class JobType(object):
     PRICE_UPDATE = 0
@@ -38,6 +48,9 @@ class JobType(object):
 
 def get_pair_first_symbol(pair):
     return pair.split('_')[0]
+
+def get_pair_second_symbol(pair):
+    return pair.split('_')[1]
 
 API_KEY = '1I2JU38K-YPFH9BFS-FUPMOOXK-Z4R0RF0I'
 API_SECRET = 'top secret'

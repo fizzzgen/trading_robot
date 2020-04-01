@@ -56,5 +56,20 @@ try:
 except Exception as ex:
     logging.info(ex)
 
+try:
+    cur.execute(
+        '''CREATE TABLE trades(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        ts INTEGER,
+        price REAL,
+        type INTEGER,
+        status INTEGER,
+        pair TEXT
+        );
+        '''
+    )
+except Exception as ex:
+    logging.info(ex)
+
 conn.commit()
 conn.close()
