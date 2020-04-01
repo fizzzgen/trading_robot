@@ -1,0 +1,4 @@
+poloniexapi==0.5.7
+attrdict==2.0.1
+pandas==1.0.1
+poloniex==0.0.17
