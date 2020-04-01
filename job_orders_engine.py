@@ -184,6 +184,8 @@ def process_sell_statuses(pair):
         conn.commit()
 
         balance -= sell_amount
+        
+        # TODO: add this trade to old trades
 
 
 while True:
