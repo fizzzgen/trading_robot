@@ -1,12 +1,16 @@
+import logging
+import coloredlogs
+import sqlite3
+import datetime
+import attrdict
+import time
+
 from conf import config
 from conf import database_setup
 from functions import upstream_signal
 from poloniex import Poloniex
 
-import sqlite3
-import datetime
-import attrdict
-import time
+coloredlogs.install(level='DEBUG')
 
 
 def dict_factory(cursor, row):
@@ -21,7 +25,7 @@ conn.row_factory = dict_factory
 cur = conn.cursor()
 
 
-FIVE_MINS = 5 * 60 * 1000
+FIVE_MINS = 5 * 60
 
 api_key = config.API_KEY
 api_secret = config.API_SECRET
@@ -46,9 +50,8 @@ while True:
                 result.append(row.avg)
                 latest_ts -= FIVE_MINS
         result.reverse()
-        print(result)
         prediction_data = upstream_signal.predict(result)
-        print(prediction_data.class_proba)
+        logging.info('Prediction classes probability %s', prediction_data.class_proba)
 
         #
         # prediction data format: AttrDict
@@ -64,19 +67,22 @@ while True:
         # }
         #
 
-        if not prediction_data.buy:
+        if prediction_data.buy:
+            logging.info('Prediction for pair %s is UP!', pair)
             # deleting old predictions about this pair
             cur.execute('DELETE FROM transactions WHERE status={status} and pair="{pair}"'.format(
                 status=config.TransactionStatus.TO_ENQUEUE,
                 pair=pair,
             ))
             # inserting new prediction
-            cur.execute('INSERT INTO transactions(id, type, status, pair) VALUES(-1, {type}, {status});'.format(
+            cur.execute('INSERT INTO transactions(id, ts, type, status, pair) VALUES(-1, {ts}, {type}, {status}, "{pair}");'.format(
                 ts=datetime.datetime.utcnow().timestamp(),
                 type=config.TransactionType.BUY,
                 status=config.TransactionStatus.TO_ENQUEUE,
+                pair=pair,
             ))
             conn.commit()
+        logging.info('Prediction for pair %s is none', pair)
 
     time.sleep(config.PREDICT_DELAY)
 

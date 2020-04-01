@@ -1,12 +1,13 @@
-ESTIMATOR_PATH = 'resources/upstream_estimator.pickle'
-DB_PATH = 'resources/data'
-STOP_PERCENT = 1.007     # stop when price upper then buy_price * STOP_PERCENT
-STOP_TIME = 7 * 5 * 60 * 1000   # stop if we reached STOP_TIME
-PAIRS = ['USDT_ETH', 'USDT_BTC']
-ORDERBOOK_FORCER_MOVE_PERCENT = 1.00001
-DROP_BUY_ORDER_DELAY = 3 * 60 * 1000
-PREDICT_DELAY = 2.5 * 60
-MAX_ORDER_PERCENT = 0.5
+ESTIMATOR_PATH = '/Users/fizzzgen/trading_robot/trading_robot/resources/upstream_estimator.pickle'  # full path to estimator
+DB_PATH = '/Users/fizzzgen/trading_robot/trading_robot/resources/data'                              # full path to db
+STOP_PERCENT = 1.007                                            # stop when price upper then buy_price * STOP_PERCENT
+STOP_TIME = 7 * 5 * 60 * 1000                                   # stop if we reached STOP_TIME
+PAIRS = ['USDT_ETH']                                            # working pairs
+ORDERBOOK_FORCER_MOVE_PERCENT = 1.00001                         # the percent to move order in stack to reach someone
+DROP_BUY_ORDER_DELAY = 3 * 60 * 1000                            # drop buy order delay, drops order if incompleted
+PREDICT_DELAY = 2.5 * 60                                        # period of predict events
+MAX_ORDER_PERCENT = 0.5                                         # max amount to buy for one prediction
+MINIMAL_AMOUNT = 0.000002
 
 
 class JobStatus(object):
@@ -27,6 +28,7 @@ class TransactionStatus(object):
     COMPLETED = 3
     CANCELLED = 4
 
+
 class TradeType(object):
     BUY = 0
     SELL = 1
@@ -37,7 +39,6 @@ class TradeStatus(object):
     PROCESSED = 1
 
 
-
 class JobType(object):
     PRICE_UPDATE = 0
     PREDICTION_GENERATE = 1
@@ -46,11 +47,14 @@ class JobType(object):
     PROCESS_STOPS = 4
     PROCESS_STATS = 5
 
+
 def get_pair_first_symbol(pair):
     return pair.split('_')[0]
+
 
 def get_pair_second_symbol(pair):
     return pair.split('_')[1]
 
+##### Poloniex api keys
 API_KEY = '1I2JU38K-YPFH9BFS-FUPMOOXK-Z4R0RF0I'
-API_SECRET = 'top secret'
+API_SECRET = '0f828b636002b42990387de3edd34205b767b16ff1319161e80fc674f69109f6b0ca22f902d54cbb807da4086725013ad94884c70c32c7d26b5261a07027046f'

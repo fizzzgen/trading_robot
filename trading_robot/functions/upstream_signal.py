@@ -1,3 +1,4 @@
+import logging
 import pickle
 import pandas
 import attrdict
@@ -11,12 +12,13 @@ def predict(price_history):
     price_history = list(price_history)[-2001:]
     df = pandas.DataFrame({'open': price_history})
     df = _process_df(df)
+    logging.info('input data %s', df.iloc[-1:].head())
     predicted = _estimator.predict_proba(df.iloc[-1:])
     predicted_final = _predict_from_proba(predicted)
     utc_now = datetime.datetime.utcnow()
     return attrdict.AttrDict({
         'class_proba': predicted,
-        'buy': predicted_final,
+        'buy': predicted_final[0],
         'buy_price': price_history[-1],
         'stop_price': config.STOP_PERCENT * price_history[-1],
         'stop_utc_time': (
@@ -27,7 +29,6 @@ def predict(price_history):
 
 
 def _process_df(df):
-
     price_column = 'open'
     normalize_columns = [
         'mean_10m',
@@ -53,6 +54,8 @@ def _process_df(df):
     df['mean_40m'] = mean(df['open'], 120)
     df['mean_80m'] = mean(df['open'], 480)
     df['mean_160m'] = mean(df['open'], 2000)
+
+    logging.info(df.head(10))
 
     def normalize_column(price_column, normalize_column):
         result_column = []
