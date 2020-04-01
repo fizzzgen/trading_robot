@@ -59,7 +59,7 @@ except Exception as ex:
 try:
     cur.execute(
         '''CREATE TABLE trades(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id INTEGER PRIMARY KEY,
         ts INTEGER,
         price REAL,
         type INTEGER,

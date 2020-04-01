@@ -31,7 +31,7 @@ def _update_status(transaction_id, status):
     conn.commit()
 
 
-def process_buy_statuses(pair):
+def process_buy(pair):
     to_enqueue = cur.execute(
         '''
         SELECT * FROM transactions WHERE pair="{pair}" and status={status} ORDER BY id DESC LIMIT 1;
@@ -85,7 +85,7 @@ def process_buy_statuses(pair):
     return True
 
 
-def process_stack_engine(pair):
+def move_orders(pair):
     pair_orders = attrdict.AttrDict(polo.returnOpenOrders(currencyPair=pair))
     print("Pair orders", pair_orders)
     latest_order = cur.execute(
@@ -97,12 +97,12 @@ def process_stack_engine(pair):
 
     for order_data in pair_orders:
         if order_data.type == 'buy':
-            _process_buy_order(order_data, latest_order, pair)
+            _move_buy_orders(order_data, latest_order, pair)
         else:
-            _process_sell_order(order_data, latest_order, pair)
+            _move_sell_orders(order_data, latest_order, pair)
 
 
-def _process_buy_order(order_data, latest_order, pair):
+def _move_buy_orders(order_data, latest_order, pair):
     target_price = latest_order.buy * config.ORDERBOOK_FORCER_MOVE_PERCENT
     try:
         sql_order_data = cur.execute('SELECT * from transactions WHERE id={}'.format(order_data.orderNumber)).fetchall()[0]
@@ -111,7 +111,7 @@ def _process_buy_order(order_data, latest_order, pair):
             polo.cancelOrder(order_data.orderNumber)
             _update_status(order_data.orderNumber, config.TransactionStatus.CANCELLED)
             conn.commit()
-            continue
+            return
 
         print('Trying to force order', sql_order_data)
         new_order = attrdict.AttrDict(polo.moveOrder(order_data.orderNumber, target_price))
@@ -129,12 +129,32 @@ def _process_buy_order(order_data, latest_order, pair):
         return False
 
 
-def _process_sell_order(order_data, latest_order, pair):
-    # TODO: implement moving ON_STOP sell orders
+def _move_sell_orders(order_data, latest_order, pair):
+    target_price = latest_order.buy / config.ORDERBOOK_FORCER_MOVE_PERCENT
+    try:
+        sql_order_data = cur.execute('SELECT * from transactions WHERE id={}'.format(order_data.orderNumber)).fetchall()[0]
+        if sql_order_data.status != config.TransactionStatus.ON_STOP:
+            print("Order waits rate stop {}".format(sql_order_data))
+            return
+
+        print('Trying to force order', sql_order_data)
+        new_order = attrdict.AttrDict(polo.moveOrder(order_data.orderNumber, target_price))
+        print('Forcing to target price success')
+        cur.execute(
+            '''UPDATE transactions SET price={}, id={} WHERE id={}'''.format(
+                target_price, new_order.orderNumber, order_data.orderNumber
+            )
+        )
+        conn.commit()
+        print('Updating db success')
+        return True
+    except Exception as ex:
+        print('Exception when forcing to target price', ex)
+        return False
     pass
 
 
-def process_sell_statuses(pair):
+def process_sell(pair):
     # add stop statuses
     pair_orders = attrdict.AttrDict(polo.returnOpenOrders(currencyPair=pair))
 
@@ -184,25 +204,40 @@ def process_sell_statuses(pair):
         conn.commit()
 
         balance -= sell_amount
-        
-        # TODO: add this trade to old trades
+
+        cur.execute(
+            '''INSERT INTO trades(id,ts,price,type,status,pair) VALUES(
+            {id},
+            {ts},
+            {type},
+            {status},
+            "{pair}"
+            )
+            '''.format(
+                id=trade.globalTradeId,
+                ts=datetime.datetime.utcnow().timestamp(),
+                type=config.TradeType.BUY,
+                status=config.TradeStatus.PROCESSED
+            )
+        )
+        conn.commit()
 
 
 while True:
 
     for pair in config.PAIRS:
         try:
-            process_buy_statuses(pair)
+            move_orders(pair)
         except Exception as ex:
             print("FATAL", ex)
 
         try:
-            process_sell_statuses(pair)
+            process_sell(pair)
         except Exception as ex:
             print("FATAL", ex)
 
         try:
-            process_stack_engine(pair)
+            process_buy(pair)
         except Exception as ex:
             print("FATAL", ex)
 
