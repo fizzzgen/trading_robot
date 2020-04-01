@@ -1,7 +1,8 @@
 import pickle
 import pandas
+import attrdict
 import datetime
-import config
+from conf import config
 
 _estimator = pickle.load(open(config.ESTIMATOR_PATH, 'rb'))
 
@@ -13,7 +14,7 @@ def predict(price_history):
     predicted = _estimator.predict_proba(df.iloc[-1:])
     predicted_final = _predict_from_proba(predicted)
     utc_now = datetime.datetime.utcnow()
-    return {
+    return attrdict.AttrDict({
         'class_proba': predicted,
         'buy': predicted_final,
         'buy_price': price_history[-1],
@@ -22,7 +23,7 @@ def predict(price_history):
             utc_now + datetime.timedelta(seconds=config.STOP_TIME)
         ),
         'utc_time': utc_now,
-    }
+    })
 
 
 def _process_df(df):
@@ -69,7 +70,6 @@ def _predict_from_proba(
     predicted, up_prob=0.64, straight_prob=0, downprob=0.17
 ):
     predict_final = []
-    print(predicted)
     for p in predicted:
         predict_final.append(
             p[3] > up_prob and p[0] < downprob and p[1] + p[2] > straight_prob
