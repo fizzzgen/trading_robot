@@ -2,7 +2,7 @@
 Description=Adding new prices to data
 
 [Service]
-ExecStart=/usr/bin/python3 /home/fizzzgen/trading_robot/job_price_update.py
+ExecStart=/usr/bin/python3 /home/fizzzgen/trading_robot/trading_robot/job_price_update.py
 Restart=always
 
 [Install]

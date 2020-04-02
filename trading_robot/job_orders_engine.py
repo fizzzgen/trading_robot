@@ -88,7 +88,7 @@ def process_buy(pair):
     ).fetchall()[0]
 
     balance = attrdict.AttrDict(polo.returnCompleteBalances()[config.get_pair_first_symbol(pair)])
-
+    print(balance)
     target_price = latest_order.buy * config.ORDERBOOK_FORCER_MOVE_PERCENT
     amount = balance.available * config.MAX_ORDER_PERCENT / target_price
     if amount < config.MINIMAL_AMOUNT:
