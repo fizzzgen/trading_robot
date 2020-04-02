@@ -4,3 +4,4 @@ poloniexapi==0.5.7
 pandas==1.0.1
 poloniex==0.0.17
 scikit-learn==0.22.1
+pytelegrambotapi==3.6.7
