@@ -11,7 +11,7 @@ import attrdict
 import datetime
 import time
 from poloniex import Poloniex
-import logging
+from functions import telegram_log
 
 
 def _dict_factory(cursor, row):
@@ -70,9 +70,11 @@ def process_buy(pair):
 
     if not to_enqueue:
         logging.info('STOP BUY PAIR %s, BUY SKIP: NO PREDICTION', pair)
+        telegram_log.online_log('BUY: no prediction for pair {} - skip buy'.format(pair))
         return None
 
     to_enqueue = to_enqueue[0]
+    telegram_log.online_log
 
     # deleting old predictions
     cur.execute('DELETE FROM transactions WHERE status={status} and pair="{pair}"'.format(
@@ -93,9 +95,12 @@ def process_buy(pair):
     amount = balance.available * config.MAX_ORDER_PERCENT / target_price
     if amount < config.MINIMAL_AMOUNT:
         logging.info('STOP BUY PAIR %s, BUY FAIL: NOT ENOUGH BALANCE', pair)
+        telegram_log.online_log('BUY: prediction is True but not enought balance for pair {} - skip buy'.format(pair))
         return False
 
-    order_data = polo.buy(pair, target_price, amount)
+    order_data = attrdict.AttrDict(polo.buy(pair, target_price, amount))
+    telegram_log.online_log('BUY: {} - success'.format(pair))
+    telegram_log.online_log_important('BUY: Order {}'.format(order_data))
 
     cur.execute(
         '''INSERT INTO transactions(
@@ -262,12 +267,15 @@ def process_sell(pair):
 
 
 while True:
-
-    for pair in config.PAIRS:
-        logging.info('START PROCESS PAIR %s', pair)
-        move_orders(pair)
-        process_sell(pair)
-        process_buy(pair)
-        logging.info('FINISH PROCESS PAIR %s', pair)
+    try:
+        for pair in config.PAIRS:
+            logging.info('START PROCESS PAIR %s', pair)
+            move_orders(pair)
+            process_sell(pair)
+            process_buy(pair)
+            logging.info('FINISH PROCESS PAIR %s', pair)
+    except Exception as ex:
+        telegram_log.online_log_important('FATAL IN ORDER ENGINE: {}'.format(ex))
+        raise
 
 conn.close()
