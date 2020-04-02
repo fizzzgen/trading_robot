@@ -58,3 +58,7 @@ def get_pair_second_symbol(pair):
 ##### Poloniex api keys
 API_KEY = '1I2JU38K-YPFH9BFS-FUPMOOXK-Z4R0RF0I'
 API_SECRET = 'secret'
+
+##### Telegram bot api
+TELEGRAM_TOKEN = '1102534557:AAGD3wLaZmvQtCtgTw-CCV9P9i-UpCVkKXU'
+TELEGRAM_ADMIN = 301021892
