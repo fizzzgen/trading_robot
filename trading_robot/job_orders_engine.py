@@ -89,7 +89,8 @@ def process_buy(pair):
     ).fetchall()[0]
 
     balance = attrdict.AttrDict(polo.returnCompleteBalances()[config.get_pair_first_symbol(pair)])
-    print(balance)
+    logging.info(balance)
+    balance.available = float(balance.available)
     target_price = latest_order.buy * config.ORDERBOOK_FORCER_MOVE_PERCENT
     amount = balance.available * config.MAX_ORDER_PERCENT / target_price
     if amount < config.MINIMAL_AMOUNT:
@@ -145,7 +146,7 @@ def _move_buy_orders(order_data, latest_order, pair):
     target_price = latest_order.buy * config.ORDERBOOK_FORCER_MOVE_PERCENT
     try:
         sql_order_data = cur.execute('SELECT * from transactions WHERE id={}'.format(order_data.orderNumber)).fetchall()[0]
-        if sql_order_data.ts + config.DROP_BUY_ORDER_DELAY < datetime.datetime.utcnow().timestamp:
+        if sql_order_data.ts + config.DROP_BUY_ORDER_DELAY < datetime.datetime.utcnow().timestamp():
             logging.info("Cancelling order {} BY TIME".format(sql_order_data))
             polo.cancelOrder(order_data.orderNumber)
             _update_status(order_data.orderNumber, config.TransactionStatus.CANCELLED)
