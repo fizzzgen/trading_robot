@@ -1,5 +1,5 @@
 apt-get install python3-pip
-pip install -r requirements.txt
+pip3 install -r requirements.txt
 cp trading_robot/services/* /etc/systemd/system/.
 systemctl daemon-reload
 systemctl start job_predict.service

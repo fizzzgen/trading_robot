@@ -133,7 +133,7 @@ def move_orders(pair):
         SELECT * FROM price WHERE pair="{}" ORDER BY id DESC LIMIT 1;
         '''.format(pair)
     ).fetchall()[0]
-
+    telegram_log.online_log("LATEST PRICES" + str(latest_order))
     for order_data in pair_orders:
         order_data = attrdict.AttrDict(order_data)
         order_data.rate = float(order_data.rate)
@@ -146,7 +146,8 @@ def move_orders(pair):
 
 
 def _move_buy_orders(order_data, latest_order, pair):
-    target_price = float(latest_order.buy) * config.ORDERBOOK_FORCER_MOVE_PERCENT
+
+    target_price = float(latest_order.sell) * config.ORDERBOOK_FORCER_MOVE_PERCENT
     try:
         sql_order_data = cur.execute('SELECT * from transactions WHERE id={}'.format(order_data.orderNumber)).fetchall()
         if not sql_order_data:
