@@ -107,7 +107,7 @@ def process_buy(pair):
         '''INSERT INTO transactions(
         id, ts, type, pair, status, amount, price
         ) VALUES (
-        {id}, {ts}, {type}, "{pair}", {status}, {amount}, {price},
+        {id}, {ts}, {type}, "{pair}", {status}, {amount}, {price}
         ) '''.format(
             id=order_data.orderNumber,
             ts=to_enqueue.ts,
@@ -126,7 +126,7 @@ def process_buy(pair):
 
 def move_orders(pair):
     logging.info('START MOVE ORDERS PAIR %s', pair)
-    pair_orders = attrdict.AttrDict(polo.returnOpenOrders(currencyPair=pair))
+    pair_orders = polo.returnOpenOrders(currencyPair=pair)
     logging.info("Pair orders %s", pair_orders)
     latest_order = cur.execute(
         '''
@@ -135,6 +135,9 @@ def move_orders(pair):
     ).fetchall()[0]
 
     for order_data in pair_orders:
+        order_data = attrdict.AttrDict(order_data)
+        order_data.rate = float(order_data.rate)
+        order_data.amount = float(order_data.amount)
         if order_data.type == 'buy':
             _move_buy_orders(order_data, latest_order, pair)
         else:
@@ -143,9 +146,12 @@ def move_orders(pair):
 
 
 def _move_buy_orders(order_data, latest_order, pair):
-    target_price = latest_order.buy * config.ORDERBOOK_FORCER_MOVE_PERCENT
+    target_price = float(latest_order.buy) * config.ORDERBOOK_FORCER_MOVE_PERCENT
     try:
-        sql_order_data = cur.execute('SELECT * from transactions WHERE id={}'.format(order_data.orderNumber)).fetchall()[0]
+        sql_order_data = cur.execute('SELECT * from transactions WHERE id={}'.format(order_data.orderNumber)).fetchall()
+        if not sql_order_data:
+            return
+        sql_order_data = sql_order_data[0]
         if sql_order_data.ts + config.DROP_BUY_ORDER_DELAY < datetime.datetime.utcnow().timestamp():
             logging.info("Cancelling order {} BY TIME".format(sql_order_data))
             polo.cancelOrder(order_data.orderNumber)
@@ -170,9 +176,12 @@ def _move_buy_orders(order_data, latest_order, pair):
 
 
 def _move_sell_orders(order_data, latest_order, pair):
-    target_price = latest_order.buy / config.ORDERBOOK_FORCER_MOVE_PERCENT
+    target_price = float(latest_order.buy) / config.ORDERBOOK_FORCER_MOVE_PERCENT
     try:
-        sql_order_data = cur.execute('SELECT * from transactions WHERE id={}'.format(order_data.orderNumber)).fetchall()[0]
+        sql_order_data = cur.execute('SELECT * from transactions WHERE id={}'.format(order_data.orderNumber)).fetchall()
+        if not sql_order_data:
+            return
+        sql_order_data = sql_order_data[0]
         if sql_order_data.status != config.TransactionStatus.ON_STOP:
             logging.info("Order waits rate stop {}".format(sql_order_data))
             return
@@ -189,7 +198,7 @@ def _move_sell_orders(order_data, latest_order, pair):
         logging.info('Updating db success')
         return True
     except Exception as ex:
-        logging.warn('Exception when forcing to target price', ex)
+        logging.warn('Exception when forcing to target price %s', ex)
         return False
     pass
 
@@ -197,9 +206,10 @@ def _move_sell_orders(order_data, latest_order, pair):
 def process_sell(pair):
     # add stop statuses
     logging.info('START SELL PAIR %s', pair)
-    pair_orders = attrdict.AttrDict(polo.returnOpenOrders(currencyPair=pair))
+    pair_orders = polo.returnOpenOrders(currencyPair=pair)
 
     for order_data in pair_orders:
+        order_data = attrdict.AttrDict(order_data)
         if order_data.type == 'buy':
             continue
         sql_order_data = cur.execute('SELECT * from transactions WHERE id={}'.format(order_data.orderNumber)).fetchall()[0]
@@ -219,20 +229,23 @@ def process_sell(pair):
         )
     )
     balance = attrdict.AttrDict(polo.returnCompleteBalances()[config.get_pair_second_symbol(pair)]).available
+    balance = float(balance)
     for trade in new_trades:
+        trade.amount = float(trade.amount)
+        trade.rate = float(trade.rate)
         can_sell_amount = balance
         target_price = trade.rate * config.STOP_PERCENT
         sell_amount = min(trade.amount, can_sell_amount)
         if sell_amount < config.MINIMAL_AMOUNT:
             continue
 
-        order_data = polo.sell(pair, target_price, sell_amount)
+        order_data = attrdict.AttrDict(polo.sell(pair, target_price, sell_amount))
 
         cur.execute(
             '''INSERT INTO transactions(
             id, ts, type, pair, status, amount, price
             ) VALUES (
-            {id}, {ts}, {type}, "{pair}", {status}, {amount}, {price},
+            {id}, {ts}, {type}, "{pair}", {status}, {amount}, {price}
             ) '''.format(
                 id=order_data.orderNumber,
                 ts=datetime.datetime.utcnow().timestamp(),
@@ -257,7 +270,7 @@ def process_sell(pair):
             "{pair}"
             )
             '''.format(
-                id=trade.globalTradeId,
+                id=trade.globalTradeID,
                 ts=datetime.datetime.utcnow().timestamp(),
                 type=config.TradeType.BUY,
                 status=config.TradeStatus.PROCESSED
