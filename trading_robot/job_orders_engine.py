@@ -91,13 +91,12 @@ def process_buy(pair):
     balance = attrdict.AttrDict(polo.returnCompleteBalances()[config.get_pair_first_symbol(pair)])
     logging.info(balance)
     balance.available = float(balance.available)
-    target_price = latest_order.buy * config.ORDERBOOK_FORCER_MOVE_PERCENT
+    target_price = latest_order.sell * config.ORDERBOOK_FORCER_MOVE_PERCENT
     amount = balance.available * config.MAX_ORDER_PERCENT / target_price
     if amount < config.MINIMAL_AMOUNT:
         logging.info('STOP BUY PAIR %s, BUY FAIL: NOT ENOUGH BALANCE', pair)
         telegram_log.online_log('BUY: prediction is True but not enought balance for pair {} - skip buy'.format(pair))
         return False
-
 
     order_data = attrdict.AttrDict(polo.buy(pair, target_price, amount))
     telegram_log.online_log('BUY: {} - success'.format(pair))
