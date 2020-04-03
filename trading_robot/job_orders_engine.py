@@ -74,7 +74,6 @@ def process_buy(pair):
         return None
 
     to_enqueue = to_enqueue[0]
-    telegram_log.online_log
 
     # deleting old predictions
     cur.execute('DELETE FROM transactions WHERE status={status} and pair="{pair}"'.format(
@@ -97,6 +96,7 @@ def process_buy(pair):
         logging.info('STOP BUY PAIR %s, BUY FAIL: NOT ENOUGH BALANCE', pair)
         telegram_log.online_log('BUY: prediction is True but not enought balance for pair {} - skip buy'.format(pair))
         return False
+
 
     order_data = attrdict.AttrDict(polo.buy(pair, target_price, amount))
     telegram_log.online_log('BUY: {} - success'.format(pair))

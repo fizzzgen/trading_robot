@@ -22,7 +22,7 @@ def send_emails(title,msg):
 def online_log(text):
     global latest, aggregator
     aggregator.append(text)
-    if latest < time.time() - 5 * 60 * 1000:
+    if latest < time.time() - 5 * 60:
         send_emails('TRADE INFO', '\n'.join(aggregator))
         aggregator = []
         latest = time.time()
