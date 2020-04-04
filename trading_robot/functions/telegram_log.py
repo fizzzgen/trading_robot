@@ -15,9 +15,12 @@ def send_emails(title,msg):
     server.login(mail,password)
     server.auth_plain()
     message = 'Subject: {}\n\n{}'.format(title,msg)
-    server.sendmail(mail ,mail,message)
-    server.quit()
-    print('E-mails successfully sent!')
+    try:
+        server.sendmail(mail ,mail,message)
+        server.quit()
+        print('E-mails successfully sent!')
+    except:
+        pass
 
 def online_log(text):
     global latest, aggregator

@@ -5,9 +5,10 @@ STOP_TIME = 7 * 5 * 60                                 # stop if we reached STOP
 PAIRS = ['USDT_ETH']                                            # working pairs
 ORDERBOOK_FORCER_MOVE_PERCENT = 1.00001                         # the percent to move order in stack to reach someone
 DROP_BUY_ORDER_DELAY = 3 * 60                            # drop buy order delay, drops order if incompleted
-PREDICT_DELAY = 2.5 * 60                                        # period of predict events
-MAX_ORDER_PERCENT = 0.1                                         # max amount to buy for one prediction
+PREDICT_DELAY = 10                                        # period of predict events
+MAX_ORDER_PERCENT = 0.03                                         # max amount to buy for one prediction
 MINIMAL_AMOUNT = 0.000002
+ONE_BET = 1.2
 
 
 class JobStatus(object):

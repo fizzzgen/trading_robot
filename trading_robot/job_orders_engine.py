@@ -92,8 +92,8 @@ def process_buy(pair):
     logging.info(balance)
     balance.available = float(balance.available)
     target_price = latest_order.sell * config.ORDERBOOK_FORCER_MOVE_PERCENT
-    amount = balance.available * config.MAX_ORDER_PERCENT / target_price
-    if amount < config.MINIMAL_AMOUNT:
+    amount = config.ONE_BET / target_price
+    if amount < config.MINIMAL_AMOUNT or amount < balance.available:
         logging.info('STOP BUY PAIR %s, BUY FAIL: NOT ENOUGH BALANCE', pair)
         telegram_log.online_log('BUY: prediction is True but not enought balance for pair {} - skip buy'.format(pair))
         return False
@@ -230,17 +230,22 @@ def process_sell(pair):
     )
     balance = attrdict.AttrDict(polo.returnCompleteBalances()[config.get_pair_second_symbol(pair)]).available
     balance = float(balance)
+    next_sell_amount = 0.0
     for trade in new_trades:
         trade.amount = float(trade.amount)
         trade.rate = float(trade.rate)
         can_sell_amount = balance
         target_price = trade.rate * config.STOP_PERCENT
-        sell_amount = min(trade.amount, can_sell_amount)
+        sell_amount = min(trade.amount + next_sell_amount, can_sell_amount)
         if sell_amount < config.MINIMAL_AMOUNT:
+            next_sell_amount = sell_amount
             continue
+        next_sell_amount = 0
 
-        order_data = attrdict.AttrDict(polo.sell(pair, target_price, sell_amount))
-
+        try:
+            order_data = attrdict.AttrDict(polo.sell(pair, target_price, sell_amount))
+        except:
+            continue
         cur.execute(
             '''INSERT INTO transactions(
             id, ts, type, pair, status, amount, price
