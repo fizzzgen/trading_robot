@@ -84,5 +84,17 @@ try:
 except Exception as ex:
     logging.info(ex)
 
+try:
+    cur.execute(
+        '''CREATE TABLE balance(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        ts INTEGER,
+        value REAL
+        );
+        '''
+    )
+except Exception as ex:
+    logging.info(ex)
+
 conn.commit()
 conn.close()

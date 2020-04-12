@@ -85,6 +85,7 @@ class ChartDescription(object):
 
 CHARTS = [
     ChartDescription("engine_ping", "engine_ping", "engine_ping"),
+    ChartDescription("balance", "balance", "balance"),
 ]
 
 FRAMES = [
@@ -97,6 +98,10 @@ def engine_ping():
     cur.execute('SELECT ts, value FROM ping;')
     return json.dumps(cur.fetchall())
 
+@app.route("/balance")
+def balance():
+    cur.execute('SELECT ts, value FROM balance')
+    return json.dumps(cur.fetchall())
 
 @app.route("/dashboard")
 def dash():

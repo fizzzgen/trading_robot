@@ -67,7 +67,11 @@ def process_buy(pair):
             status=config.TransactionStatus.TO_ENQUEUE,
         )
     ).fetchall()
-
+    balance = attrdict.AttrDict(polo.returnCompleteBalances()[config.get_pair_first_symbol(pair)])
+    logging.info(balance)
+    balance.available = float(balance.available)
+    cur.execute('INSERT INTO balance(ts, value) values(?, ?);', (int(time.time())*1000, balance.available))
+    conn.commit()
     if not to_enqueue:
         logging.info('STOP BUY PAIR %s, BUY SKIP: NO PREDICTION', pair)
         telegram_log.online_log('BUY: no prediction for pair {} - skip buy'.format(pair))
@@ -88,9 +92,6 @@ def process_buy(pair):
         '''.format(pair)
     ).fetchall()[0]
 
-    balance = attrdict.AttrDict(polo.returnCompleteBalances()[config.get_pair_first_symbol(pair)])
-    logging.info(balance)
-    balance.available = float(balance.available)
     target_price = latest_order.sell * config.ORDERBOOK_FORCER_MOVE_PERCENT
     amount = config.ONE_BET / target_price
     if amount < config.MINIMAL_AMOUNT or amount < balance.available:
