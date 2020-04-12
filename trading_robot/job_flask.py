@@ -1,4 +1,13 @@
 from flask import Flask, make_response
+import logging
+import json
+
+coloredlogs.install(level='DEBUG')
+
+import sqlite3
+
+conn = sqlite3.connect(config.DB_PATH)
+cur = conn.cursor()
 app = Flask(__name__)
 
 
@@ -77,22 +86,18 @@ class ChartDescription(object):
 
 
 CHARTS = [
-    ChartDescription("chart1data", "test", "test series"),
-    ChartDescription("chart1data", "test", "test series"),
-    ChartDescription("chart1data", "test", "test series"),
-    ChartDescription("chart1data", "test", "test series"),
+    ChartDescription("engine_ping", "engine_ping", "engine_ping"),
 ]
 
 FRAMES = [
     '/dashboard',
-    '/dashboard',
 ]
 
 
-@app.route("/chart1data")
-def simple():
-    
-    return "[[1,1],[2,2],[3,3],[4,4]]"
+@app.route("/engine_ping")
+def engine_ping():
+    cur.execute('SELECT ts, value FROM ping;')
+    return json.dumps(cur.fetchall())
 
 
 @app.route("/dashboard")

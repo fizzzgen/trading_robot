@@ -71,5 +71,18 @@ try:
 except Exception as ex:
     logging.info(ex)
 
+try:
+    cur.execute(
+        '''CREATE TABLE ping(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        ts INTEGER,
+        type INTEGER,
+        value INTEGER
+        );
+        '''
+    )
+except Exception as ex:
+    logging.info(ex)
+
 conn.commit()
 conn.close()
