@@ -1,12 +1,10 @@
 from flask import Flask, make_response
 import logging
 import json
-
-coloredlogs.install(level='DEBUG')
-
+from conf import config
 import sqlite3
 
-conn = sqlite3.connect(config.DB_PATH)
+conn = sqlite3.connect(config.DB_PATH, check_same_thread=False)
 cur = conn.cursor()
 app = Flask(__name__)
 
@@ -126,4 +124,4 @@ def dash_framed():
 
 
 if __name__ == "__main__":
-    app.run()
+    app.run(host='0.0.0.0')

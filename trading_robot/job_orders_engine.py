@@ -293,10 +293,10 @@ while True:
             process_sell(pair)
             process_buy(pair)
             logging.info('FINISH PROCESS PAIR %s', pair)
-        cur.execute('INSERT INTO ping(ts,type,value) VALUES(?, ?, ?)', (int(time.time()), 1, 1))
+        cur.execute('INSERT INTO ping(ts,type,value) VALUES(?, ?, ?)', (int(time.time()*1000), 1, 1))
         conn.commit()
     except Exception as ex:
-        cur.execute('INSERT INTO ping(ts,type,value) VALUES(?, ?, ?)', (int(time.time()), 1, 2))
+        cur.execute('INSERT INTO ping(ts,type,value) VALUES(?, ?, ?)', (int(time.time()*1000), 1, 2))
         conn.commit()
         telegram_log.online_log_important('FATAL IN ORDER ENGINE: {}'.format(ex))
         raise
