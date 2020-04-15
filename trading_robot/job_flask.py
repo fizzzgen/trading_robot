@@ -1,11 +1,16 @@
 from flask import Flask, make_response
-import logging
 import json
-from conf import config
 import sqlite3
+from conf import config
+from resources import constants
 
-conn = sqlite3.connect(config.DB_PATH, check_same_thread=False)
-cur = conn.cursor()
+
+def get_conn_cur():
+    conn = sqlite3.connect(config.DB_PATH, check_same_thread=False)
+    cur = conn.cursor()
+
+    return conn, cur
+
 app = Flask(__name__)
 
 
@@ -19,12 +24,7 @@ class ChartDescription(object):
 class HtmlDashCreator(object):
     def __init__(self):
 
-        self.html = '''
-<script src="https://code.highcharts.com/stock/highstock.js"></script>
-<script src="https://code.highcharts.com/stock/modules/data.js"></script>
-<script src="https://code.highcharts.com/stock/modules/exporting.js"></script>
-<script src="https://code.highcharts.com/stock/modules/export-data.js"></script>
-'''
+        self.html = constants.chart_head
         self.chart_counter = 1
 
 
@@ -34,37 +34,7 @@ class HtmlDashCreator(object):
         chart_series_name = chart_description.chart_series_name
         chart_id = self.chart_counter
         self.chart_counter += 1
-        template = '''
-<script>
-
-Highcharts.getJSON('{data_url}', function (data) {{
-    // Create the chart
-    Highcharts.stockChart('{chart_id}', {{
-
-
-        rangeSelector: {{
-            selected: 1
-        }},
-
-        title: {{
-            text: '{chart_name}'
-        }},
-
-        series: [{{
-            name: '{series_name}',
-            data: data,
-            tooltip: {{
-                valueDecimals: 5
-            }}
-        }}]
-    }});
-}});
-Highcharts.setOptions(Highcharts.theme);
-
-</script>
-<div id='{chart_id}' style="height: 400px; min-width: 310px"></div>
-
-'''
+        template = constants.chart_pattern
         self.html += template.format(
             chart_id=chart_id,
             chart_name=chart_name,
@@ -94,24 +64,29 @@ FRAMES = [
 
 
 @app.route("/engine_ping")
-def engine_ping():
+def _engine_ping():
+    conn, cur = get_conn_cur()
     cur.execute('SELECT ts, value FROM ping;')
     return json.dumps(cur.fetchall())
 
+
 @app.route("/balance")
-def balance():
+def _balance():
+    conn, cur = get_conn_cur()
     cur.execute('SELECT ts, value FROM balance')
     return json.dumps(cur.fetchall())
 
+
 @app.route("/dashboard")
-def dash():
+def _dash():
     dashboard = HtmlDashCreator()
     for chart in CHARTS:
         dashboard.add_chart(chart)
     return dashboard.html
 
+
 @app.route("/dashboard_framed")
-def dash_framed():
+def _dash_framed():
     html = '''<!DOCTYPE html>
     <html>
 
@@ -123,9 +98,6 @@ def dash_framed():
     </html>
     '''.format(frame1=FRAMES[0], frame2=FRAMES[1])
     return html
-
-
-
 
 
 if __name__ == "__main__":
