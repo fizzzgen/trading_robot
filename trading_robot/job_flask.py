@@ -58,8 +58,14 @@ CHARTS = [
     ChartDescription("balance", "balance", "balance"),
 ]
 
+CHARTS2 = [
+    ChartDescription("engine_ping", "engine_ping", "engine_ping"),
+    ChartDescription("balance", "balance", "balance"),
+]
+
 FRAMES = [
     '/dashboard',
+    '/dashboard2',
 ]
 
 
@@ -81,6 +87,14 @@ def _balance():
 def _dash():
     dashboard = HtmlDashCreator()
     for chart in CHARTS:
+        dashboard.add_chart(chart)
+    return dashboard.html
+
+
+@app.route("/dashboard2")
+def _dash2():
+    dashboard = HtmlDashCreator()
+    for chart in CHARTS2:
         dashboard.add_chart(chart)
     return dashboard.html
 
