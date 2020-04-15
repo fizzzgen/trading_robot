@@ -94,7 +94,7 @@ def process_buy(pair):
 
     target_price = latest_order.sell * config.ORDERBOOK_FORCER_MOVE_PERCENT
     amount = config.ONE_BET / target_price
-    if amount < config.MINIMAL_AMOUNT or amount < balance.available:
+    if amount < config.MINIMAL_AMOUNT or amount > balance.available:
         logging.info('STOP BUY PAIR %s, BUY FAIL: NOT ENOUGH BALANCE', pair)
         telegram_log.online_log('BUY: prediction is True but not enought balance for pair {} - skip buy'.format(pair))
         return False
