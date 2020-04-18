@@ -53,7 +53,7 @@ class Sensor(Base):
     value = sqlalchemy.Column(sqlalchemy.Float)
 
 Base.metadata.create_all(_engine)
-_session_maker = orm.sessionmaker(bind=_engine)
+_session_maker = orm.sessionmaker(bind=_engine, expire_on_commit=False)
 
 
 @contextmanager

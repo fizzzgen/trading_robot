@@ -49,7 +49,9 @@ def process_buy(pair):
             telegram_log.online_log('BUY: prediction is True but not enought balance for pair {} - skip buy'.format(pair))
             return False
 
-        order_data = attrdict.AttrDict(polo.buy(pair, target_price, amount))
+        order_data = polo.buy(pair, target_price, amount)
+        order_data = attrdict.AttrDict(order_data)
+
         telegram_log.online_log('BUY: {} - success'.format(pair))
         telegram_log.online_log_important('BUY: Order {}'.format(order_data))
 
