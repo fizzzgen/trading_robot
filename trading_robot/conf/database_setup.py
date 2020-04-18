@@ -1,100 +1,71 @@
-import sqlite3
+import sqlalchemy
 import logging
 
+from sqlalchemy import orm
 from conf import config
+from contextlib import contextmanager
+from sqlalchemy.ext.declarative import declarative_base
+
+_engine = sqlalchemy.create_engine('sqlite:///{}'.format(config.DB_PATH))
+Base = declarative_base()
+
+class Transaction(Base):
+    __tablename__ = 'Transactions',
+
+    id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True)
+    ts = sqlalchemy.Column(sqlalchemy.Integer)
+    ts_performed = sqlalchemy.Column(sqlalchemy.Integer)
+    type = sqlalchemy.Column(sqlalchemy.Integer)
+    pair = sqlalchemy.Column(sqlalchemy.String(32))
+    amount = sqlalchemy.Column(sqlalchemy.Float)
+    price = sqlalchemy.Column(sqlalchemy.Float)
+    status = sqlalchemy.Column(sqlalchemy.Integer)
 
 
-conn = sqlite3.connect(config.DB_PATH)
-cur = conn.cursor()
+class Price(Base):
+    __tablename__ = 'Price',
 
-try:
-    cur.execute(
-        '''CREATE TABLE transactions(
-        id INTEGER PRIMARY KEY,
-        ts INTEGER,
-        ts_performed INTEGER,
-        type INTEGER,
-        pair TEXT,
-        status INTEGER,
-        amount REAL,
-        price REAL
-        );
-        '''
-    )
-except Exception as ex:
-    logging.info(ex)
+    id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True)
+    ts = sqlalchemy.Column(sqlalchemy.Integer)
+    avg = sqlalchemy.Column(sqlalchemy.Float)
+    buy = sqlalchemy.Column(sqlalchemy.Float)
+    sell = sqlalchemy.Column(sqlalchemy.Float)
+    pair = sqlalchemy.Column(sqlalchemy.String(32))
 
-try:
-    cur.execute(
-        '''CREATE TABLE transactions_history(
-        id INTEGER PRIMARY KEY,
-        ts INTEGER,
-        ts_performed INTEGER,
-        type INTEGER,
-        pair TEXT,
-        status INTEGER,
-        amount REAL,
-        price REAL
-        );
-        '''
-    )
-except Exception as ex:
-    logging.info(ex)
 
-try:
-    cur.execute(
-        '''CREATE TABLE price(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        ts INTEGER,
-        avg REAL,
-        buy REAL,
-        sell REAL,
-        pair TEXT
-        );
-        '''
-    )
-except Exception as ex:
-    logging.info(ex)
+class Trade(Base):
+    __tablename__ = 'Trades'
 
-try:
-    cur.execute(
-        '''CREATE TABLE trades(
-        id INTEGER PRIMARY KEY,
-        ts INTEGER,
-        price REAL,
-        type INTEGER,
-        status INTEGER,
-        pair TEXT
-        );
-        '''
-    )
-except Exception as ex:
-    logging.info(ex)
+    id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True)
+    ts = sqlalchemy.Column(sqlalchemy.Integer)
+    price = sqlalchemy.Column(sqlalchemy.Float)
+    type = sqlalchemy.Column(sqlalchemy.Integer)
+    pair = sqlalchemy.Column(sqlalchemy.String(32))
+    status = sqlalchemy.Column(sqlalchemy.Integer)
 
-try:
-    cur.execute(
-        '''CREATE TABLE ping(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        ts INTEGER,
-        type INTEGER,
-        value INTEGER
-        );
-        '''
-    )
-except Exception as ex:
-    logging.info(ex)
 
-try:
-    cur.execute(
-        '''CREATE TABLE balance(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        ts INTEGER,
-        value REAL
-        );
-        '''
-    )
-except Exception as ex:
-    logging.info(ex)
+class Sensor(Base):
+    __tablename__ = 'Sensors'
+    id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True)
+    ts = sqlalchemy.Column(sqlalchemy.Integer)
+    type = sqlalchemy.Column(sqlalchemy.Integer)
+    additional = sqlalchemy.Column(sqlalchemy.String(128))
+    value = sqlalchemy.Column(sqlalchemy.Float)
 
-conn.commit()
-conn.close()
+Base.metadata.create_all(_engine)
+_session_maker = orm.sessionmaker(bind=_engine)
+
+
+@contextmanager
+def session_scope():
+    """Provide a transactional scope around a series of operations."""
+    session = _session_maker()
+    try:
+        yield session
+        session.commit()
+    except Exception as ex:
+        logging.exception(ex)
+        session.rollback()
+        raise
+    finally:
+        session.close()
