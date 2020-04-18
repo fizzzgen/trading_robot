@@ -1,5 +1,5 @@
 ESTIMATOR_PATH = '/home/fizzzgen/trading_robot/trading_robot/resources/upstream_estimator.pickle'  # full path to estimator
-DB_PATH = '/Users/fizzzgen/trading_robot/trading_robot/resources/data.sqlite'                              # full path to db
+DB_PATH = '/home/fizzzgen/trading_robot/trading_robot/resources/data.sqlite'                              # full path to db
 STOP_PERCENT = 1.007                                            # stop when price upper then buy_price * STOP_PERCENT
 STOP_TIME = 7 * 5 * 60                                 # stop if we reached STOP_TIME
 PAIRS = ['USDT_ETH']                                            # working pairs
