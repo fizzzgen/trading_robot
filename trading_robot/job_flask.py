@@ -1,15 +1,7 @@
 from flask import Flask, make_response
 import json
-import sqlite3
-from conf import config
+from conf import config, database_setup as db
 from resources import constants
-
-
-def get_conn_cur():
-    conn = sqlite3.connect(config.DB_PATH, check_same_thread=False)
-    cur = conn.cursor()
-
-    return conn, cur
 
 app = Flask(__name__)
 
@@ -59,8 +51,7 @@ CHARTS = [
 ]
 
 CHARTS2 = [
-    ChartDescription("engine_ping", "engine_ping", "engine_ping"),
-    ChartDescription("balance", "balance", "balance"),
+    ChartDescription("price", "price", "price"),
 ]
 
 FRAMES = [
@@ -71,16 +62,23 @@ FRAMES = [
 
 @app.route("/engine_ping")
 def _engine_ping():
-    conn, cur = get_conn_cur()
-    cur.execute('SELECT ts, value FROM ping;')
-    return json.dumps(cur.fetchall())
+    with db.session_scope() as session:
+        data = session.query(db.Sensor.ts, db.Sensor.value).filter(db.Sensor.type == config.SensorType.ERROR).all()
+    return json.dumps(data)
 
 
 @app.route("/balance")
 def _balance():
-    conn, cur = get_conn_cur()
-    cur.execute('SELECT ts, value FROM balance')
-    return json.dumps(cur.fetchall())
+    with db.session_scope() as session:
+        data = session.query(db.Sensor.ts, db.Sensor.value).filter(db.Sensor.type == config.SensorType.BALANCE).all()
+    return json.dumps(data)
+
+
+@app.route("/price")
+def _price():
+    with db.session_scope() as session:
+        data = session.query(db.Sensor.ts, db.Sensor.value).filter(db.Sensor.type == config.SensorType.PRICE).all()
+    return json.dumps(data)
 
 
 @app.route("/dashboard")
