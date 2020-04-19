@@ -1,28 +1,12 @@
 import logging
-import coloredlogs
-import sqlite3
 import datetime
 import attrdict
 import time
 
 from conf import config
-from conf import database_setup
+from conf import database_setup as db
 from functions import upstream_signal
 from poloniex import Poloniex
-
-coloredlogs.install(level='DEBUG')
-
-
-def dict_factory(cursor, row):
-    d = {}
-    for idx, col in enumerate(cursor.description):
-        d[col[0]] = row[idx]
-    return attrdict.AttrDict(d)
-
-
-conn = sqlite3.connect(config.DB_PATH)
-conn.row_factory = dict_factory
-cur = conn.cursor()
 
 
 FIVE_MINS = 5 * 60
@@ -32,58 +16,44 @@ api_secret = config.API_SECRET
 polo = Poloniex(api_key, api_secret)
 
 while True:
-    for pair in config.PAIRS:
-        data = cur.execute(
-            'SELECT avg, ts FROM price WHERE pair="{}" ORDER BY ts DESC'.format(
-                pair
-            )
-        ).fetchall()
+    with db.session_scope() as session:
+        for pair in config.PAIRS:
 
-        result = []
-        latest_ts = data[0].ts + FIVE_MINS
+            data = session.query(db.Price).filter(db.Price.pair == pair).order_by(db.Price.ts.desc()).all()
 
-        if latest_ts < datetime.datetime.utcnow().timestamp():
-            print('Too old price data')
-            continue
-        for row in data:
-            if row.ts <= latest_ts - FIVE_MINS:
-                result.append(row.avg)
-                latest_ts -= FIVE_MINS
-        result.reverse()
-        prediction_data = upstream_signal.predict(result)
-        logging.info('Prediction classes probability %s', prediction_data.class_proba)
+            result = []
+            latest_ts = data[0].ts + FIVE_MINS
 
-        #
-        # prediction data format: AttrDict
-        # {
-        # 'class_proba': predicted,
-        # 'buy': predicted_final,
-        # 'buy_price': price_history[-1],
-        # 'stop_price': config.STOP_PERCENT * price_history[-1],
-        # 'stop_utc_time': (
-        #     utc_now + datetime.timedelta(seconds=config.STOP_TIME)
-        # ),
-        # 'utc_time': utc_now,
-        # }
-        #
-
-        if prediction_data.buy:
-            logging.info('Prediction for pair %s is UP!', pair)
-            # deleting old predictions about this pair
-            cur.execute('DELETE FROM transactions WHERE status={status} and pair="{pair}"'.format(
-                status=config.TransactionStatus.TO_ENQUEUE,
-                pair=pair,
-            ))
-            # inserting new prediction
-            cur.execute('INSERT INTO transactions(id, ts, type, status, pair) VALUES(-1, {ts}, {type}, {status}, "{pair}");'.format(
-                ts=datetime.datetime.utcnow().timestamp(),
-                type=config.TransactionType.BUY,
-                status=config.TransactionStatus.TO_ENQUEUE,
-                pair=pair,
-            ))
-            conn.commit()
-        logging.info('Prediction for pair %s is none', pair)
+            if latest_ts < datetime.datetime.utcnow().timestamp():
+                print('Too old price data')
+                continue
+            for row in data:
+                if row.ts <= latest_ts - FIVE_MINS:
+                    result.append(row.avg)
+                    latest_ts -= FIVE_MINS
+            result.reverse()
+            prediction_data = upstream_signal.predict(result)
+            logging.info('Prediction classes probability %s', prediction_data.class_proba)
+            if prediction_data.buy:
+                logging.info('Prediction for pair %s is UP!', pair)
+                # deleting old predictions about this pair
+                session.query(db.Transaction).filter(
+                    db.Transaction.status == config.TransactionStatus.TO_ENQUEUE
+                ).filter(
+                    db.Transaction.pair == pair
+                ).delete()
+                # inserting new prediction
+                session.add(
+                    db.Transaction(
+                        id=-1,
+                        ts=datetime.datetime.utcnow().timestamp(),
+                        type=config.TransactionType.BUY,
+                        status=config.TransactionStatus.TO_ENQUEUE,
+                        pair=pair,
+                    )
+                )
+                session.commit()
+            else:
+                logging.info('Prediction for pair %s is none', pair)
 
     time.sleep(config.PREDICT_DELAY)
-
-conn.close()
