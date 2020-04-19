@@ -52,6 +52,7 @@ class JobType(object):
 class SensorType(object):
     BALANCE = 0
     ERROR = 1
+    PRICE = 2
 
 
 def get_pair_first_symbol(pair):

@@ -1,12 +1,8 @@
 from conf import config
-from conf import database_setup
-import sqlite3
+from conf import database_setup as db
 import time
 import datetime
 from poloniex import Poloniex
-
-conn = sqlite3.connect(config.DB_PATH)
-cur = conn.cursor()
 
 api_key = config.API_KEY
 api_secret = config.API_SECRET
@@ -25,12 +21,22 @@ while True:
         sell = float(data['bids'][0][0])
         avg = (buy + sell) / 2
         ts = datetime.datetime.utcnow().timestamp()
-        query = 'INSERT INTO price(ts,avg,buy,sell,pair) VALUES({},{},{},{},"{}")'.format(
-            ts, avg, buy, sell, key
-        )
-        cur.execute(query)
-    conn.commit()
-    print('TIME:', str(time.time() - time1)[:5], query)
-
-
-conn.close()
+        with db.session_scope() as session:
+            session.add(
+                db.Price(
+                    ts=ts,
+                    avg=avg,
+                    buy=buy,
+                    sell=sell,
+                    pair=key,
+                )
+            )
+            session.add(
+                db.Sensor(
+                    ts=ts * 1000,
+                    type=config.SensorType.PRICE,
+                    additional=key,
+                    value=avg,
+                )
+            )
+    print('TIME:', str(time.time() - time1)[:5])
