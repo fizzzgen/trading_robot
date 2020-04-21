@@ -25,4 +25,6 @@
 Переместить файлы *.service в соответствующую директорию System.D
 
 #### Запуск:
-sudo systemctl *.service start (Для каждого отдельно)
+sudo systemctl *.service start (Для каждого отдельно), либо скриптом setup_and_run.sh
+
+В модели предсказаний используется случайный лес на sklearn.
