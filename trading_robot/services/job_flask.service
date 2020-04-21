@@ -1,5 +1,5 @@
 [Unit]
-Description=Adding new prices to data
+Description=TRADING ROBOT FLASK SERVER
 
 [Service]
 ExecStart=/usr/bin/python3 /home/fizzzgen/trading_robot/trading_robot/job_flask.py
