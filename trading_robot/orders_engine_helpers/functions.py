@@ -4,11 +4,21 @@ import logging
 from poloniex import Poloniex
 from conf import config, database_setup as db
 
+import ccxt
+
+_polo = Poloniex()
 
 def configure_poloniex():
     api_key = config.API_KEY
     api_secret = config.API_SECRET
-    polo = Poloniex(api_key, api_secret)
+    polo = ccxt.poloniex()
+
+    polo.apiKey = api_key
+    polo.secret = api_secret
+
+    print(polo)
+
+#configure_poloniex()
 
     _timing = time.time()
 
@@ -20,13 +30,22 @@ def configure_poloniex():
             return f(*args, **kwargs)
         return decorator
 
-    polo.buy = _arc(polo.buy)
-    polo.sell = _arc(polo.sell)
-    polo.returnCompleteBalances = _arc(polo.returnCompleteBalances)
-    polo.returnOpenOrders = _arc(polo.returnOpenOrders)
-    polo.cancelOrder = _arc(polo.cancelOrder)
-    polo.moveOrder = _arc(polo.moveOrder)
-    polo.returnTradeHistory = _arc(polo.returnTradeHistory)
+    polo.create_order = _arc(polo.create_order)
+
+    polo.buy = polo.create_order(type='buy')
+    polo.sell = polo.create_order(type='sell')
+    polo.fetch_balance = _arc(polo.fetch_balance)
+    polo.fetch_open_orders = _arc(polo.fetch_open_orders)
+    polo.cancel_order = _arc(polo.cancel_order)
+    polo.fetch_trades = _arc(polo.fetch_trades)
+
+    # polo.buy = _arc(polo.buy)
+    # polo.sell = _arc(polo.sell)
+    # polo.returnCompleteBalances = _arc(polo.returnCompleteBalances)
+    # polo.returnOpenOrders = _arc(polo.returnOpenOrders)
+    # polo.cancelOrder = _arc(polo.cancelOrder)
+    # polo.moveOrder = _arc(polo.moveOrder)
+    # polo.returnTradeHistory = _arc(polo.returnTradeHistory)
     return polo
 
 
@@ -39,11 +58,5 @@ def _update_status(transaction_id, status):
 
 def _get_latest_order(pair):
         with db.session_scope() as session:
-            latest_order = session.query(
-                db.Price
-            ).filter(
-                db.Price.pair == pair
-            ).order_by(
-                db.Price.id.desc()
-            ).limit(1).all()[0]
+            latest_order = session.query(db.Price).filter(db.Price.pair == pair).order_by(db.Price.id.desc()).limit(1).all()[0]
         return latest_order

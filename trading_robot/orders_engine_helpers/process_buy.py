@@ -18,7 +18,7 @@ def process_buy(pair):
         prediction_query = prediction_query.filter(db.Transaction.status == config.TransactionStatus.TO_ENQUEUE)
         to_enqueue = prediction_query.all()
 
-        balance = attrdict.AttrDict(polo.returnCompleteBalances()[config.get_pair_first_symbol(pair)])
+        balance = attrdict.AttrDict(polo.fetch_balance()[config.get_pair_first_symbol(pair)])
         logging.info(balance)
         balance.available = float(balance.available)
 
@@ -57,7 +57,7 @@ def process_buy(pair):
 
         session.add(
             db.Transaction(
-                id=order_data.orderNumber,
+                id=order_data['orderNumber'],
                 ts=to_enqueue.ts,
                 type=config.TransactionType.BUY,
                 pair=pair,
