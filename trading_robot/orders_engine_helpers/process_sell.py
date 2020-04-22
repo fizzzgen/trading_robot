@@ -52,6 +52,7 @@ def process_sell(pair):
         balance = float(balance)
         next_sell_amount = 0.0
         for trade in new_trades:
+            logging.exception('processing new trade for selling: %s', trade)
             trade.amount = float(trade.amount)
             trade.rate = float(trade.rate)
             can_sell_amount = balance
@@ -59,13 +60,15 @@ def process_sell(pair):
             sell_amount = min(trade.amount + next_sell_amount, can_sell_amount)
             if sell_amount < config.MINIMAL_AMOUNT:
                 next_sell_amount = sell_amount
+                logging.exception('sell amount < minimal amount, skipping trade: %s', trade)
                 continue
             next_sell_amount = 0
 
             try:
                 order_data = attrdict.AttrDict(polo.sell(pair, target_price, sell_amount))
-            except:
+            except Exception as ex:
                 session.add(db.Sensor(ts=int(time.time()*1000), type=config.SensorType.ERROR, value=10))
+                logging.info('exception while trying to sell order: %s %s', trade, ex)
                 continue
             session.add(
                 db.Transaction(
