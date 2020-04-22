@@ -21,7 +21,7 @@ def process_sell(pair):
             if order_data.type == 'buy':
                 continue
             order_data_query = session.query(db.Transaction).filter(
-                db.Transactions.id == (order_data.orderNumber)
+                db.Transaction.id == (order_data.orderNumber)
             )
             sql_order_data = order_data_query.all()
             if not sql_order_data:
