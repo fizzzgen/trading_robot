@@ -53,6 +53,12 @@ while True:
                     )
                 )
                 session.commit()
+                session.add(
+                    db.Sensor(
+                        type=config.SensorType.PREDICTION,
+                        value=1,
+                    )
+                )
             else:
                 logging.info('Prediction for pair %s is none', pair)
 
