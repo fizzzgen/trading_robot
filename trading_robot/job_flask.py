@@ -94,7 +94,7 @@ def _dash2():
 def _dash_framed():
     html = '''<!DOCTYPE html>
     <html>
-
+    <meta http-equiv="Refresh" content="5" />
     <frameset cols="50%,*">
     <frame src="{frame1}">
     <frame src="{frame2}">
