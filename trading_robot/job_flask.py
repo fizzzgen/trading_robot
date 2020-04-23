@@ -45,6 +45,7 @@ CHARTS = [
 
 CHARTS2 = [
     ChartDescription("price", "price", "price"),
+    ChartDescription("prediction", "prediction", "prediction")
 ]
 
 FRAMES = [
@@ -71,6 +72,13 @@ def _balance():
 def _price():
     with db.session_scope() as session:
         data = session.query(db.Sensor.ts, db.Sensor.value).filter(db.Sensor.type == config.SensorType.PRICE).all()
+    return json.dumps(data)
+
+
+@app.route("/prediction")
+def _price():
+    with db.session_scope() as session:
+        data = session.query(db.Sensor.ts, db.Sensor.value).filter(db.Sensor.type == config.SensorType.PREDICTION).all()
     return json.dumps(data)
 
 

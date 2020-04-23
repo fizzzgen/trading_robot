@@ -53,6 +53,7 @@ class SensorType(object):
     BALANCE = 0
     ERROR = 1
     PRICE = 2
+    PREDICTION = 3
 
 
 def get_pair_first_symbol(pair):
