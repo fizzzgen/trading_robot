@@ -61,6 +61,13 @@ while True:
                     )
                 )
             else:
+                session.add(
+                    db.Sensor(
+                        type=config.SensorType.PREDICTION,
+                        value=-1,
+                        ts=int(time.time() * 1000),
+                    )
+                )
                 logging.info('Prediction for pair %s is none', pair)
 
     time.sleep(config.PREDICT_DELAY)
