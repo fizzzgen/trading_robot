@@ -57,6 +57,7 @@ while True:
                     db.Sensor(
                         type=config.SensorType.PREDICTION,
                         value=1,
+                        ts=int(time.time() * 1000),
                     )
                 )
             else:
