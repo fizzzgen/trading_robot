@@ -7,7 +7,7 @@ app = Flask(__name__)
 
 
 class ChartDescription(object):
-    def __init__(data_url, chart_name, chart_series_name):
+    def __init__(self, data_url, chart_name, chart_series_name):
         self.data_url = data_url
         self.chart_name = chart_name
         self.chart_series_name = chart_series_name
@@ -34,15 +34,8 @@ class HtmlDashCreator(object):
             data_url=data_url
         )
 
-    def render():
+    def render(self):
         return self.html
-
-
-class ChartDescription(object):
-    def __init__(self, data_url, chart_name, chart_series_name):
-        self.data_url = data_url
-        self.chart_name = chart_name
-        self.chart_series_name = chart_series_name
 
 
 CHARTS = [
