@@ -34,7 +34,7 @@ while True:
             result.reverse()
             prediction_data = upstream_signal.predict(result)
             logging.info('Prediction classes probability %s', prediction_data.class_proba)
-            if prediction_data.buy:
+            if prediction_data.buy and len(result) >= 3:
                 logging.info('Prediction for pair %s is UP!', pair)
                 # deleting old predictions about this pair
                 session.query(db.Transaction).filter(
