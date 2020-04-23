@@ -76,7 +76,7 @@ def _price():
 
 
 @app.route("/prediction")
-def _price():
+def prediction():
     with db.session_scope() as session:
         data = session.query(db.Sensor.ts, db.Sensor.value).filter(db.Sensor.type == config.SensorType.PREDICTION).all()
     return json.dumps(data)
@@ -102,7 +102,7 @@ def _dash2():
 def _dash_framed():
     html = '''<!DOCTYPE html>
     <html>
-    <meta http-equiv="Refresh" content="5" />
+    <meta http-equiv="Refresh" content="60" />
     <frameset cols="50%,*">
     <frame src="{frame1}">
     <frame src="{frame2}">
