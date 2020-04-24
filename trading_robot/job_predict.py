@@ -25,7 +25,7 @@ while True:
             latest_ts = data[0].ts + FIVE_MINS
 
             if latest_ts < datetime.datetime.utcnow().timestamp():
-                print('Too old price data')
+                print('Too old price data', datetime.datetime.utcnow().timestamp() - latest_ts)
                 continue
             for row in data:
                 if row.ts <= latest_ts - FIVE_MINS:
@@ -33,7 +33,7 @@ while True:
                     latest_ts -= FIVE_MINS
             result.reverse()
             prediction_data = upstream_signal.predict(result)
-            logging.info('Prediction classes probability %s', prediction_data.class_proba)
+            print('Prediction classes probability %s', prediction_data.class_proba)
             if prediction_data.buy and len(result) >= 3:
                 logging.info('Prediction for pair %s is UP!', pair)
                 # deleting old predictions about this pair

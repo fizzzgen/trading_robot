@@ -25,4 +25,4 @@ while True:
             session.add(db.Sensor(ts=int(time.time() * 1000), type=config.SensorType.ERROR, value=100))
 
         telegram_log.online_log_important('FATAL IN ORDER ENGINE: {}'.format(ex))
-        raise
+        time.sleep(60)
