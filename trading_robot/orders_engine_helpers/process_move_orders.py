@@ -12,7 +12,7 @@ polo = functions.configure_poloniex()
 
 def move_orders(pair):
     logging.info('START MOVE ORDERS PAIR %s', pair)
-    pair_orders = polo.returnOpenOrders(currencyPair=pair)
+    pair_orders = polo.fetch_open_orders(symbol=pair)
     logging.info("Pair orders %s", pair_orders)
     latest_order = functions._get_latest_order(pair)
     telegram_log.online_log("LATEST PRICES" + str(latest_order))
@@ -33,7 +33,7 @@ def _move_buy_order(order_data, latest_order, pair):
     try:
         with db.session_scope() as session:
             order_data_query = session.query(db.Transaction).filter(
-                db.Transaction.id == (order_data.orderNumber)
+                db.Transactions.id == (order_data.orderNumber)
             )
             sql_order_data = order_data_query.all()
 
@@ -43,11 +43,11 @@ def _move_buy_order(order_data, latest_order, pair):
             sql_order_data = sql_order_data[0]
             if sql_order_data.ts + config.DROP_BUY_ORDER_DELAY < datetime.datetime.utcnow().timestamp():
                 logging.info("Cancelling order {} BY TIME".format(sql_order_data))
-                polo.cancelOrder(order_data.orderNumber)
+                polo.cancel_order(order_data.orderNumber)
                 functions._update_status(order_data.orderNumber, config.TransactionStatus.CANCELLED)
                 return
 
-            logging.info('Trying to force order %s', sql_order_data.id)
+            logging.info('Trying to force order %s', sql_order_data)
             new_order = attrdict.AttrDict(polo.moveOrder(order_data.orderNumber, target_price))
             logging.info('Forcing to target price success')
             order_data_query.update(
@@ -70,7 +70,7 @@ def _move_sell_order(order_data, latest_order, pair):
     try:
         with db.session_scope() as session:
             order_data_query = session.query(db.Transaction).filter(
-                db.Transaction.id == (order_data.orderNumber)
+                db.Transactions.id == (order_data.orderNumber)
             )
             sql_order_data = order_data_query.all()
 
@@ -82,7 +82,7 @@ def _move_sell_order(order_data, latest_order, pair):
                 logging.info("Order waits rate stop {}".format(sql_order_data))
                 return
 
-            logging.info('Trying to force order %s', sql_order_data.id)
+            logging.info('Trying to force order', sql_order_data)
             new_order = attrdict.AttrDict(polo.moveOrder(order_data.orderNumber, target_price))
             logging.info('Forcing to target price success')
             order_data_query.update(
